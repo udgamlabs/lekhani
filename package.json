@@ -1,0 +1,8 @@
+{
+  "name": "lekhani",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Lekhani: a 0.87 MB Hindi transliterator (Latin letters to Devanagari) that runs in the browser or Node",
+  "license": "Apache-2.0"
+}

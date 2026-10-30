@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lekhani example</title>
+<style>
+  body { font: 18px/1.5 system-ui, sans-serif; max-width: 680px; margin: 40px auto; padding: 0 16px; color: #1c1b18; background: #fbf9f4; }
+  textarea { width: 100%; min-height: 120px; font: 28px/1.4 system-ui, "Noto Sans Devanagari", sans-serif; padding: 12px; box-sizing: border-box; }
+  #status { color: #5e5c57; font-size: 15px; }
+  #suggest button { font: 20px system-ui, "Noto Sans Devanagari", sans-serif; margin: 6px 6px 0 0; padding: 4px 12px; }
+</style>
+</head>
+<body>
+<h1>Lekhani</h1>
+<p>Type Hindi in Latin letters. Each word turns into Devanagari when you type a space. Everything runs in this page.</p>
+<textarea id="box" placeholder="kaise ho" autofocus></textarea>
+<div id="suggest"></div>
+<p id="status">Loading 0.87 MB…</p>
+<script type="module">
+  // Serve the repository root with any static server, then open /examples/browser/.
+  import { Transliterator } from "../../files/translit.js";
+  const t0 = performance.now();
+  const tr = await Transliterator.load({
+    model: "../../files/model.q4.gz", json: "../../files/model.json.gz",
+    words: "../../files/words.bin.gz", rerank: "../../files/rerank.json",
+  });
+  const status = document.getElementById("status");
+  status.textContent = `Loaded in ${Math.round(performance.now() - t0)} ms. Nothing you type leaves this page.`;
+
+  const box = document.getElementById("box");
+  const suggest = document.getElementById("suggest");
+  let last = null;   // the last converted word: { start, end, candidates }
+
+  box.addEventListener("input", () => {
+    // convert every finished Latin word (one followed by a space or punctuation) before the caret
+    const caret = box.selectionStart;
+    const before = box.value.slice(0, caret);
+    let out = "", pos = 0, changed = false;
+    for (const m of before.matchAll(/[A-Za-z]+(?=[^A-Za-z])/g)) {
+      const r = tr.word(m[0]);
+      out += before.slice(pos, m.index);
+      last = { start: out.length, end: out.length + r.best.length, candidates: r.candidates.slice(0, 4).map((c) => c.text) };
+      out += r.best;
+      pos = m.index + m[0].length;
+      changed = true;
+    }
+    if (!changed) return;
+    out += before.slice(pos);
+    box.value = out + box.value.slice(caret);
+    box.setSelectionRange(out.length, out.length);
+    showSuggestions();
+  });
+
+  function showSuggestions() {
+    suggest.replaceChildren(...last.candidates.map((w) => {
+      const b = document.createElement("button");
+      b.textContent = w;
+      b.onclick = () => {   // replace the last word with the chosen spelling
+        const v = box.value;
+        box.value = v.slice(0, last.start) + w + v.slice(last.end);
+        last.end = last.start + w.length;
+        box.focus();
+      };
+      return b;
+    }));
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+Lekhani
+Copyright 2026 Udgam Labs LLP
+
+The model weights (model.q4.gz, model.json.gz) and the runner (translit.js) are licensed under the Apache License,
+Version 2.0 (see LICENSE). The word list (words.bin.gz) is dedicated to the public domain under CC0 1.0
+(https://creativecommons.org/publicdomain/zero/1.0/). The model was trained from random initialisation by Udgam Labs;
+no third-party model weights are included.
+
+This model was trained on word pairs from Aksharantar (AI4Bharat), whose hand-collected part is licensed CC-BY and
+mined parts CC0: https://huggingface.co/datasets/ai4bharat/Aksharantar
+(Madhani et al., "Aksharantar: Towards Building Open Transliteration Tools for the Next Billion Users", 2022,
+arXiv:2205.03018).
+
+IndicXlit (AI4Bharat, MIT licence) was used as a teacher to label training words:
+https://github.com/AI4Bharat/IndicXlit
+
+The word list is derived from word counts of IndicCorp v2 Hindi (AI4Bharat, CC0):
+https://huggingface.co/datasets/ai4bharat/IndicCorpV2
+
+English words given to the teacher came from the CMU Pronouncing Dictionary
+(Copyright (C) 1993-2015 Carnegie Mellon University; BSD-style licence):
+https://github.com/cmusphinx/cmudict
