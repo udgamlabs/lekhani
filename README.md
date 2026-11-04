@@ -94,6 +94,11 @@ words; the previous runner took 25 to 33 ms and 53 to 63 ms on the same machine.
 runs in plain JavaScript, about six times slower. The previous runner's figures on a Mac mini (Chromium: 18 ms a word,
 about 23 MB of memory) have not been measured again with this one.
 
+Speed on a phone (realme 12 Pro 5G, Snapdragon 6 Gen 1, Android 16, Chrome 155; one run of 54 words, each timed 5
+times): it starts in 0.3 s once the files are downloaded and takes 8.3 ms a word at the median, and 1 word in 20 takes
+20.5 ms or more; the previous runner took 45 ms and 114 ms on the same words. The word list differs from the ones
+above, so these figures are not a direct comparison with the laptop.
+
 ## Results
 
 **Aksharantar Hindi test** (AI4Bharat): 9,991 romanised words, top-1 exact match against any reference spelling,
@@ -130,7 +135,8 @@ paired for gaps. Measured by us on 28 October 2026.
   `main ghar ja raha hoon` → में घर जा रहा हूं (should be मैं).
 - **IndicXlit's full package is 2.8 points more accurate** on the main test.
 - **Hindi only**, Latin to Devanagari only.
-- **Speed was measured on one Mac mini.** Phones and older laptops are not measured yet.
+- **The current runner's speed was measured on one laptop and one mid-range phone.** Budget phones and older laptops
+  are not measured yet.
 
 ## How it was trained
 

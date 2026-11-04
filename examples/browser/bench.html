@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lekhani speed test</title>
+<style>
+  body { font: 16px/1.5 system-ui, sans-serif; margin: 16px; }
+  button { font-size: 18px; padding: 10px 18px; }
+  pre { white-space: pre-wrap; font-size: 14px; }
+</style>
+</head>
+<body>
+<h1>Lekhani speed test</h1>
+<p>Keep this tab open and the screen on until it finishes.</p>
+<button id="go">Run</button>
+<pre id="out"></pre>
+<script type="module">
+  // Serve the repository root, then open /examples/browser/bench.html on the phone.
+  import { Transliterator } from "../../files/translit.js";
+
+  const WORDS = `kaise ho kya haal hai bhai aaj office mein meeting main ghar ja raha hoon accha kal delhi namaste dhanyavaad
+    shukriya mujhe tumhara naam pata nahi samajh paani khana kitab school computer mobile internet bazaar dukaan
+    hindustan pradhanmantri vishwavidyalaya sarkar zindagi mohabbat dosti parivaar subah shaam raat doctor
+    train station kahani bahut thoda jaldi`.trim().split(/\s+/);
+  const ROUNDS = 5;
+
+  const out = document.getElementById("out"), go = document.getElementById("go");
+  const log = (s) => { out.textContent += s + "\n"; };
+  const breathe = () => new Promise((r) => setTimeout(r, 50));   // let the page repaint between rounds
+  const ms = (x) => x.toFixed(1).padStart(7) + " ms";
+  const pct = (sorted, p) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))];
+
+  go.onclick = async () => {
+    go.disabled = true; out.textContent = "";
+    log(navigator.userAgent);
+    log(`${WORDS.length} words x ${ROUNDS} rounds, one warm-up round\n`);
+    await breathe();
+
+    // 1. download, kept apart from start-up
+    let t = performance.now();
+    const get = (n) => fetch("../../files/" + n, { cache: "no-store" }).then((r) => r.arrayBuffer());
+    const [model, json, words, rr] = await Promise.all(
+      ["model.q4.gz", "model.json.gz", "words.bin.gz", "rerank.json"].map(get));
+    log(`Fetch files     ${ms(performance.now() - t)}  (depends on your network, not the phone)`);
+
+    // 2. start-up: unzip, unpack the 4-bit weights, build the word list
+    t = performance.now();
+    const tr = await Transliterator.load({
+      model, json, words, rerank: JSON.parse(new TextDecoder().decode(rr)),
+    });
+    log(`Start-up        ${ms(performance.now() - t)}`);
+    log(`WebAssembly SIMD ${tr.simd ? "yes" : "no (plain JavaScript, much slower)"}`);
+    tr.cacheSize = 0;   // repeated words would otherwise be cache lookups, not real work
+
+    // 3. the very first word, before the JavaScript engine has optimised anything
+    t = performance.now();
+    const first = tr.word(WORDS[0]).best;
+    log(`First word      ${ms(performance.now() - t)}  (${WORDS[0]} -> ${first})`);
+
+    // 4. warm-up round, not counted
+    for (const w of WORDS) tr.word(w);
+    await breathe();
+
+    // 5. measured rounds; each word is timed on its own
+    const all = [], perRound = [];
+    for (let r = 0; r < ROUNDS; r++) {
+      const times = [];
+      for (const w of WORDS) {
+        const a = performance.now();
+        tr.word(w);
+        times.push(performance.now() - a);
+      }
+      times.sort((x, y) => x - y);
+      perRound.push(pct(times, 0.5));
+      all.push(...times);
+      log(`Round ${r + 1} median  ${ms(perRound[r])}`);
+      await breathe();
+    }
+
+    all.sort((x, y) => x - y);
+    const mean = all.reduce((s, x) => s + x, 0) / all.length;
+    log(`\nMedian per word ${ms(pct(all, 0.5))}`);
+    log(`95th percentile ${ms(pct(all, 0.95))}`);
+    log(`Slowest word    ${ms(all[all.length - 1])}`);
+    log(`Mean per word   ${ms(mean)}`);
+    log(`Words a second  ${(1000 / mean).toFixed(1).padStart(7)}`);
+    go.disabled = false;
+    window.__done = true;
+  };
+</script>
+</body>
+</html>
