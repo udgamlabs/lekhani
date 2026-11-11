@@ -6,33 +6,41 @@
 <title>Lekhani example</title>
 <style>
   body { font: 18px/1.5 system-ui, sans-serif; max-width: 680px; margin: 40px auto; padding: 0 16px; color: #1c1b18; background: #fbf9f4; }
-  textarea { width: 100%; min-height: 120px; font: 28px/1.4 system-ui, "Noto Sans Devanagari", sans-serif; padding: 12px; box-sizing: border-box; }
+  textarea { width: 100%; min-height: 120px; font: 28px/1.4 system-ui, sans-serif; padding: 12px; box-sizing: border-box; }
   #status { color: #5e5c57; font-size: 15px; }
-  #suggest button { font: 20px system-ui, "Noto Sans Devanagari", sans-serif; margin: 6px 6px 0 0; padding: 4px 12px; }
+  #suggest button { font: 20px system-ui, sans-serif; margin: 6px 6px 0 0; padding: 4px 12px; }
 </style>
 </head>
 <body>
 <h1>Lekhani</h1>
-<p>Type Hindi in Latin letters. Each word turns into Devanagari when you type a space. Everything runs in this page.</p>
+<p>Pick a language and type it in Latin letters. Each word turns into the language's script when you type a space. Everything runs in this page.</p>
+<select id="lang">
+  <option value="">Hindi</option><option value="telugu/">Telugu</option>
+</select>
 <textarea id="box" placeholder="kaise ho" autofocus></textarea>
 <div id="suggest"></div>
-<p id="status">Loading 0.87 MB…</p>
+<p id="status">Loading…</p>
 <script type="module">
   // Serve the repository root with any static server, then open /examples/browser/.
   import { Transliterator } from "../../files/translit.js";
-  const t0 = performance.now();
-  const tr = await Transliterator.load({
-    model: "../../files/model.q4.gz", json: "../../files/model.json.gz",
-    words: "../../files/words.bin.gz", rerank: "../../files/rerank.json",
-  });
-  const status = document.getElementById("status");
-  status.textContent = `Loaded in ${Math.round(performance.now() - t0)} ms. Nothing you type leaves this page.`;
+  // Hindi's four files are at the root of files/; every other language has the same four files in its own folder.
+  const status = document.getElementById("status"), box = document.getElementById("box"), pick = document.getElementById("lang");
+  let tr = null;
+  async function load() {
+    const d = "../../files/" + pick.value, t0 = performance.now();
+    tr = null; box.value = ""; status.textContent = "Loading…";
+    box.dir = pick.value === "urdu/" ? "rtl" : "ltr";   // Urdu is written right to left
+    tr = await Transliterator.load({ model: d + "model.q4.gz", json: d + "model.json.gz", words: d + "words.bin.gz", rerank: d + "rerank.json" });
+    status.textContent = `Loaded in ${Math.round(performance.now() - t0)} ms. Nothing you type leaves this page.`;
+  }
+  pick.onchange = load;
+  await load();
 
-  const box = document.getElementById("box");
   const suggest = document.getElementById("suggest");
   let last = null;   // the last converted word: { start, end, candidates }
 
   box.addEventListener("input", () => {
+    if (!tr) return;
     // convert every finished Latin word (one followed by a space or punctuation) before the caret
     const caret = box.selectionStart;
     const before = box.value.slice(0, caret);
