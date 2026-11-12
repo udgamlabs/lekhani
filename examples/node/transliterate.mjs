@@ -1,8 +1,9 @@
 // Lekhani in Node 18+: transliterate the text given on the command line (or a few examples) in one language.
 // Run from the repository root:
 //   node examples/node/transliterate.mjs "aaj office mein meeting hai"            (Hindi, the default)
+//   node examples/node/transliterate.mjs --lang tamil "eppadi irukkeenga"
 //   node examples/node/transliterate.mjs --lang telugu "meeru ela unnaru"
-// Languages: hindi telugu
+// Languages: hindi tamil telugu
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -25,6 +26,7 @@ const tr = await Transliterator.load({
 
 const examples = {
   hindi: ["kaise ho", "kya haal hai bhai", "aaj office mein meeting hai"],
+  tamil: ["eppadi irukkeenga", "romba nandri", "naan nalla irukken"],
   telugu: ["meeru ela unnaru", "nenu bagunnanu", "dhanyavadalu"],
 };
 for (const line of args.length ? args : examples[lang] ?? ["namaste"]) console.log(tr.text(line));

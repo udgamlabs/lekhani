@@ -1,17 +1,19 @@
 ![Lekhani · Udgam Labs](./assets/banner.png)
 
-**UDGAM LABS** · Transliterator · Hindi and Telugu, under 1 MB each, runs in the browser
+**UDGAM LABS** · Transliterator · Hindi, Tamil and Telugu, under 1 MB each, runs in the browser
 
 # Lekhani
 
-Lekhani turns words typed in Latin letters into their own script: `kaise ho` becomes कैसे हो in Hindi, `ela unnaru`
-becomes ఎలా ఉన్నారు in Telugu. It covers Hindi and Telugu. Each language is one small model (0.8M or 1.2M parameters at 4 bits) and a list of common words,
+Lekhani turns words typed in Latin letters into their own script: `kaise ho` becomes कैसे हो in Hindi, `eppadi
+irukkeenga` becomes எப்படி இருக்கீங்க in Tamil, `ela unnaru` becomes ఎలా ఉన్నారు in Telugu. It covers Hindi, Tamil and
+Telugu. Each language is one small model (0.8M or 1.2M parameters at 4 bits) and a list of common words,
 and everything a page loads for one language, runner included, is under 1 MB. It runs in a web page on your own
 device, so nothing you type is sent anywhere.
 
-On the Aksharantar test it gets the first guess right on 81.2% of Telugu words and 65.9% of Hindi words, ahead of
-IndicXlit's model on its own by 8.5 and 7.0 points. In Telugu it is level with IndicXlit's full Python package, which
-re-ranks with a word list of millions of words held in memory; in Hindi the package is ahead.
+On the Aksharantar test it gets the first guess right on 74.2% of Tamil words, 81.2% of Telugu words and 65.9% of
+Hindi words, ahead of IndicXlit's model on its own by 10.0, 8.5 and 7.0 points. In Tamil and Telugu it is level with
+IndicXlit's full Python package, which re-ranks with a word list of millions of words held in memory; in Hindi the
+package is ahead.
 
 *Lekhani* (लेखनी) is Hindi for "pen".
 
@@ -21,7 +23,7 @@ re-ranks with a word list of millions of words held in memory; in Hindi the pack
 |---|---|
 | Developer | Udgam Labs |
 | Models | One per language: encoder-decoder transformer, width 128, 2 + 2 layers (0.81M parameters) or 3 + 3 layers (1.2M), 4-bit weights, trained from random weights |
-| Files | `files/`: one runner, `translit.js`, and four files per language (Hindi at the root of `files/`, Telugu in `telugu/`); 0.87 MB (Hindi) and 0.96 MB (Telugu) in all (gzip) |
+| Files | `files/`: one runner, `translit.js`, and four files per language (Hindi at the root of `files/`, Tamil in `tamil/`, Telugu in `telugu/`); 0.87 MB (Hindi), 0.71 MB (Tamil) and 0.96 MB (Telugu) in all (gzip) |
 | Input / output | Latin letters → the language's script, one word at a time; everything that is not Latin letters is kept as it is |
 | Runtime | JavaScript (ES module) with WebAssembly SIMD where the browser has it, plain JavaScript otherwise: any modern browser, or Node 18+. No server, no WebGPU, no dependencies |
 | Licence | Apache-2.0 (models and runner); CC0 (word lists) |
@@ -41,14 +43,15 @@ Or add it to your own page: copy `files/translit.js` and your language's four fi
 | Language | Folder in `files/` | Script |
 |---|---|---|
 | Hindi | (root) | Devanagari |
+| Tamil | `tamil/` | Tamil |
 | Telugu | `telugu/` | Telugu |
 
 ```html
-<input id="in" placeholder="ela unnaru">
-<p id="out" lang="te"></p>
+<input id="in" placeholder="eppadi irukkeenga">
+<p id="out" lang="ta"></p>
 <script type="module">
   import { Transliterator } from "./translit.js";
-  const dir = "telugu/";   // "" for Hindi
+  const dir = "tamil/";   // "" for Hindi, "telugu/" for Telugu
   const tr = await Transliterator.load({
     model: dir + "model.q4.gz", json: dir + "model.json.gz", words: dir + "words.bin.gz", rerank: dir + "rerank.json",
   });
@@ -63,6 +66,7 @@ Or add it to your own page: copy `files/translit.js` and your language's four fi
 
 ```bash
 node examples/node/transliterate.mjs "aaj office mein meeting hai"     # Hindi: आज ऑफिस में मीटिंग है
+node examples/node/transliterate.mjs --lang tamil "eppadi irukkeenga"   # எப்படி இருக்கீங்க
 node examples/node/transliterate.mjs --lang telugu "meeru ela unnaru"   # మీరు ఎలా ఉన్నారు
 ```
 
@@ -72,7 +76,7 @@ node examples/node/transliterate.mjs --lang telugu "meeru ela unnaru"   # మీ
   (whether it is one of the listed common words). Show the runners-up as suggestions if you build a keyboard.
 - Nothing per language goes in the call: each folder's `rerank.json` tells the runner which script its word list uses.
 - `translit.js` is a minified build; `translit.src.js` is the same code, readable, with comments.
-- Load both languages on one page by calling `Transliterator.load` once per language.
+- Load several languages on one page by calling `Transliterator.load` once per language.
 
 Check the files with `cd files && shasum -a 256 -c ../SHA256SUMS`. The same files are on
 [Hugging Face](https://huggingface.co/udgamlabs/Lekhani).
@@ -88,25 +92,27 @@ first guess as the scored predictions on every test word.
 | Language | Test words | **Lekhani**, first guess right | IndicXlit's model on its own | Gap (paired 95% interval) | IndicXlit's full package | Download, gzip bytes |
 |---|---:|---:|---:|---:|---:|---:|
 | Hindi | 9,991 | **65.9%** (64.9 to 66.8) | 58.9% | **+7.0** (+6.1 to +8.0) | 68.7% | 872,565 |
+| Tamil | 11,405 | **74.2%** (73.4 to 75.1) | 64.2% | **+10.0** (+9.3 to +10.7) | 73.9% | 708,999 |
 | Telugu | 9,936 | **81.2%** (80.5 to 81.9) | 72.6% | **+8.5** (+7.7 to +9.3) | 81.1% | 964,906 |
 
 - **IndicXlit's model on its own** (11.5M parameters, beam 4, its default) is the comparison we set for every language
-  before training. Lekhani is ahead of it in both, and the paired intervals are well clear of zero.
+  before training. Lekhani is ahead of it in all three, and the paired intervals are well clear of zero.
 - **IndicXlit's full package** adds a word list of millions of words for each language (for Hindi, 4.2 million words,
-  358 MB in memory) and re-ranks with it. Against the package Lekhani is level in Telugu (+0.1, an
-  interval that includes zero) and behind in Hindi (-2.8).
+  358 MB in memory) and re-ranks with it. Against the package Lekhani is level in Tamil (+0.3) and Telugu
+  (+0.1), intervals that include zero, and behind in Hindi (-2.8).
 - **Download** is every file a page loads for that language, as gzip bytes: the model, its word list, the two small
-  settings files and the runner (6,625 bytes). Each is under 1,000,000: Hindi 0.87 MB, Telugu 0.96 MB.
+  settings files and the runner (6,625 bytes). Each is under 1,000,000: Hindi 0.87 MB, Tamil 0.71 MB, Telugu 0.96 MB.
 - In Hindi, our own 122-word chat set (everyday chat words, English words used in Hindi, brands and names, checked
   word by word by a native speaker): Lekhani 113, IndicXlit's package 112, IndicXlit's model 102.
 
 ## Where it falls short
 
-- **Names are weak in Telugu.** Aksharantar's name rows (AK-NEF and AK-NEI) get 58% and 59% right at top-1,
-  against 87% on its Dakshina rows (words as people type them).
-- **IndicXlit's full package, with its multi-million-word lists, is level in Telugu and ahead in Hindi** on this test.
-  On our real-typing check for Telugu (4,000 words from Dakshina's romanised sentences) Lekhani gets 72.4%, ahead of
-  IndicXlit's model (+3.2) but behind its package (-3.3). If you can hold its word lists in memory, the package is the
+- **Names are weak, most of all in Tamil.** Aksharantar's name rows (AK-NEF and AK-NEI) get 40% and 44% right at
+  top-1 in Tamil (level with IndicXlit's model there) and 58% and 59% in Telugu, against 81% and 87% on the Dakshina rows
+  (words as people type them).
+- **IndicXlit's full package, with its multi-million-word lists, is level in Tamil and Telugu and ahead in Hindi** on
+  this test. On our real-typing checks (4,000 words each from Dakshina's romanised sentences) Lekhani gets 64.0% in Tamil
+  and 72.4% in Telugu, ahead of IndicXlit's model (+6.3 and +3.2) but behind its package (-2.8 and -3.3). If you can hold its word lists in memory, the package is the
   more accurate choice there.
 - **No native-speaker review of the misses yet**, except for Hindi's chat set. Some misses may be acceptable spellings
   that are missing from the test's answer lists; some may be real errors a native reader would catch at once.
@@ -137,6 +143,7 @@ a human check.
 
 ## Changes
 
+- **Tamil (12 Nov 2026):** Tamil, in `tamil/`. The runner (1.3.0) and the Hindi and Telugu files are unchanged.
 - **1.3.0 (11 Nov 2026):** Telugu, in its own folder. One runner serves both languages: a language's `rerank.json` now
   names the first letter of its script's block, so its word list can pack any script. Hindi is unchanged:
   the same files, and the same best word, the same 8 candidates and the same scores on all 9,991 Aksharantar Hindi test
