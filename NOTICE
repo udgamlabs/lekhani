@@ -1,7 +1,8 @@
 Lekhani
 Copyright 2026 Udgam Labs LLP
 
-Lekhani covers Hindi (files at the root), Tamil and Telugu (each in its own folder). The model weights (model.q4.gz, model.json.gz) and the runner
+Lekhani covers twelve languages: Hindi (files at the root) and Tamil, Marathi, Bengali, Urdu, Kannada, Telugu,
+Malayalam, Gujarati, Punjabi, Odia and Assamese (one folder each). The model weights (model.q4.gz, model.json.gz) and the runner
 (translit.js, translit.src.js) are licensed under the Apache License, Version 2.0 (see LICENSE). The word lists
 (words.bin.gz) are dedicated to the public domain under CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/).
 Each model was trained from random initialisation by Udgam Labs; no third-party model weights are included.

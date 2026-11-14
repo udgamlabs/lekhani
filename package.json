@@ -3,6 +3,6 @@
   "version": "1.3.0",
   "private": true,
   "type": "module",
-  "description": "Lekhani: in-browser transliteration (Latin letters to each script) for Hindi, Kannada, Tamil and Telugu, under 1 MB each, in the browser or Node",
+  "description": "Lekhani: in-browser transliteration (Latin letters to each script) for 12 languages, under 1 MB each, in the browser or Node",
   "license": "Apache-2.0"
 }
